@@ -14,17 +14,11 @@ endfun
 
 fun! lgh#build_git_command(...)
   let git_cmd = get(g:, 'lgh_git_command', 'git') 
-  return git_cmd . ' --work-tree ' . lgh#get_base_dir()  . ' --git-dir ' . lgh#get_base_dir() . '/.git ' . join(a:000)
+  return git_cmd . ' --work-tree ' . lgh#get_base_dir()  . ' --git-dir ' . lgh#get_base_dir() . '/.git ' . join(a:000)  
 endfun
 
 fun! lgh#git_command(...)
-	redir => s:git_log
-  silent execute '!' . call ('lgh#build_git_command',a:000)
-	redir END
-  if v:shell_error != 0
-    echom "Git returned an error"
-    echom s:git_info
-  endif
+  let s:git_log = system(call ('lgh#build_git_command',a:000), 'silent!')
 endfun
 
 fun! lgh#init_git()
@@ -55,7 +49,7 @@ endfun
 
 fun! lgh#file_history(dirname, filename)
     let backuppath = lgh#get_base_dir() . a:dirname . '/'. a:filename
-    call lgh#git_command('log', '--format="\%ar	\%ad		\%h"', '--', backuppath)
+    call lgh#git_command('log', '--format="%ar	%ad		%h"', '--', backuppath)
     let log = split(s:git_log, '\n')
     return log[2:]
 endfun
