@@ -14,7 +14,7 @@ com! LGHistory call fzf#run({'source': lgh#file_history(expand("%:p:h"), expand(
 
 augroup local-git-history
     autocmd!
-    autocmd BufWrite * call lgh#backup_file(expand("%:p:h"), expand("%:t"))
+    autocmd BufWritePost * call lgh#backup_file(expand("%:p:h"), expand("%:t"))
 augroup END
 
 
