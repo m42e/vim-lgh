@@ -1,5 +1,5 @@
 fun! lgh#get_base_dir()
-  return fnamemodify(expand(get(b:, 'lgh_dir', g:lgh_base)), ":p")
+  return fnamemodify(expand(get(b:, 'lgh_dir', g:lgh_base)), ":p") . '/'
 endfun
 
 fun! lgh#make_dir(directory)
