@@ -1,5 +1,12 @@
 " vim-local-git-history
 
+" Loading guard
+if exists('g:lgh_loaded')
+    finish
+endif
+let g:lgh_loaded = 1
+
+" User variables
 let g:lgh_base = get(g:, 'lgh_basedir', '~/.vim/githistory')
 let g:lgh_verbose = get(g:, 'lgh_verbose', 0)
 
@@ -14,7 +21,7 @@ com! LGHistory call fzf#run({'source': lgh#file_history(expand("%:p:h"), expand(
 
 augroup local-git-history
     autocmd!
-    autocmd BufWrite * call lgh#backup_file(expand("%:p:h"), expand("%:t"))
+    autocmd BufWritePost * call lgh#backup_file(expand("%:p:h"), expand("%:t"))
 augroup END
 
 
