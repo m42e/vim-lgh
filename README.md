@@ -23,6 +23,7 @@ And then you get an fzf window with all the dates when the file has been stored.
 - Search for files where you don't have the exact filename
 - Allowing diff mode
 - Handling of more edge use cases.
+- Handling `:q` in diffmode like fugitive does
 
 ## Installation                                         
 
