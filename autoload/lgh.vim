@@ -31,6 +31,11 @@ fun! lgh#make_backup_dir(dirname)
 endfun
 
 fun! lgh#backup_file(dirname, filename)
+  let x = system("[[ \"$USERNAME\" == `who | awk '{print $1}'` ]]")
+  if v:shell_error != 0
+    echomsg "you are not acting as yourself, no backup will be taken"
+    return
+  endif
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
   call lgh#make_backup_dir(backupdir)
