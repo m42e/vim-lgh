@@ -10,7 +10,7 @@ endfun
 
 fun! lgh#build_git_command(...)
   let git_cmd = get(g:, 'lgh_git_command', 'git')
-  return git_cmd . ' --work-tree ' . lgh#get_base_dir()  . ' --git-dir ' . lgh#get_base_dir() . '.git ' . join(a:000)  
+  return git_cmd . ' --work-tree ' . lgh#get_base_dir()  . ' --git-dir ' . lgh#get_base_dir() . '.git ' . join(a:000)  . ';'
 endfun
 
 fun! lgh#git_command(...)
@@ -30,6 +30,19 @@ fun! lgh#make_backup_dir(dirname)
   call lgh#init_git()
 endfun
 
+fun! lgh#commit_history(dirname, filename)
+  let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
+  let backuppath = backupdir . '/' . a:filename
+  call lgh#git_command('add', backuppath)
+  call lgh#git_command('diff-index', '--quiet', 'HEAD', '--', backuppath)
+  if v:shell_error != 0
+    call lgh#git_command('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath)
+    if g:lgh_verbose
+      echo "Saved history for ".a:dirname.'/'.a:filename
+    endif
+  endif
+endfun
+
 fun! lgh#backup_file(dirname, filename)
   let x = system("[[ \"$USERNAME\" == `who | awk '{print $1}' | head -n 1` ]]")
   if v:shell_error != 0
@@ -39,13 +52,8 @@ fun! lgh#backup_file(dirname, filename)
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
   call lgh#make_backup_dir(backupdir)
-  silent exe '!cp ' . fnameescape(resolve(expand("%:p"))) . ' ' . fnameescape(backuppath)
-  call lgh#git_command('add', backuppath)
-  call lgh#git_command('diff-index', '--quiet', 'HEAD', '--', backuppath)
-  if v:shell_error != 0
-    call lgh#git_command('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath)
-  endif
-  redraw
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_history(a:dirname, a:filename)} }
+  call jobstart(['cp', fnameescape(resolve(expand("%:p"))), fnameescape(backuppath)], callbacks)
 endfun
 
 fun! lgh#file_history(dirname, filename)
@@ -62,7 +70,7 @@ fun! lgh#open_backup(dirname, filename, filetype, entry)
 		if get(g:, 'lgh_diff', 1)
 			diffthis
 		endif
-    exe 'vnew | r! '.lgh#build_git_command('show', commit.':'.relpath)
+    exe 'vnew | r! '.lgh#git_command('show', commit.':'.relpath)
 		exe 'normal! 1Gdd'
     exe "setlocal bt=nofile bh=wipe nobl noswf ro ft=".a:filetype." | file ".a:filename." [".entry[1]."]"
 		if get(g:, 'lgh_diff', 1)
