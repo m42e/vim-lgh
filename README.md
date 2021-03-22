@@ -3,6 +3,7 @@
 ## What this plugin does
 
 This plugin saves the file worked on in a git repository every time you save.
+Since 2021-03-18 it is done using the jobstart api, so it won't be compatible with older version of (neo)vim.
 
 ## Why? Don't you know undo?
 

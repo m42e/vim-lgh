@@ -53,7 +53,8 @@ fun! lgh#do_commit_history(error, dirname, filename)
     call jobstart(lgh#build_git_command_list('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath), callbacks)
   endif
 endfun
-fun! lgh#commit_history(dirname, filename)
+
+fun! lgh#commit_to_history(dirname, filename)
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
   let callbacks = { 'on_exit': {jobid, error, event -> lgh#do_commit_history(error, a:dirname, a:filename)} }
@@ -69,7 +70,7 @@ fun! lgh#backup_file(dirname, filename)
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
   call lgh#make_backup_dir(backupdir)
-  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_history(a:dirname, a:filename)} }
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_to_history(a:dirname, a:filename)} }
   call jobstart(['cp', fnameescape(resolve(expand("%:p"))), fnameescape(backuppath)], callbacks)
 endfun
 
