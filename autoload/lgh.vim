@@ -1,5 +1,9 @@
 fun! lgh#get_base_dir()
-  return fnamemodify(expand(get(b:, 'lgh_dir', g:lgh_base)), ":p") . '/'
+  let basedir = fnamemodify(expand(get(b:, 'lgh_dir', g:lgh_base)), ":p")
+  if basedir !~ '.*/$'
+      let basedir = basedir . '/'
+  endif
+  return basedir
 endfun
 
 fun! lgh#make_dir(directory)
@@ -11,6 +15,11 @@ endfun
 fun! lgh#build_git_command(...)
   let git_cmd = get(g:, 'lgh_git_command', 'git')
   return git_cmd . ' --work-tree ' . lgh#get_base_dir()  . ' --git-dir ' . lgh#get_base_dir() . '.git ' . join(a:000)  . ';'
+endfun
+
+fun! lgh#build_git_command_list(...)
+  let git_cmd = get(g:, 'lgh_git_command', 'git')
+  return [git_cmd, '--work-tree', lgh#get_base_dir(), '--git-dir', lgh#get_base_dir() . '.git']+ a:000 
 endfun
 
 fun! lgh#git_command(...)
@@ -30,17 +39,25 @@ fun! lgh#make_backup_dir(dirname)
   call lgh#init_git()
 endfun
 
+fun! lgh#log(what, value)
+    if get(g:, 'lgh_verbose', 0) != 0
+        echo a:what.": ".a:value
+    endif
+endfun
+
+fun! lgh#do_commit_history(error, dirname, filename)
+  if a:error != 0
+    let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
+    let backuppath = backupdir . '/' . a:filename
+    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Saved Backup to ", backupdir)}} 
+    call jobstart(lgh#build_git_command_list('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath), callbacks)
+  endif
+endfun
 fun! lgh#commit_history(dirname, filename)
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
-  call lgh#git_command('add', backuppath)
-  call lgh#git_command('diff-index', '--quiet', 'HEAD', '--', backuppath)
-  if v:shell_error != 0
-    call lgh#git_command('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath)
-    if g:lgh_verbose
-      echo "Saved history for ".a:dirname.'/'.a:filename
-    endif
-  endif
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#do_commit_history(error, a:dirname, a:filename)} }
+  call jobstart(['bash', '-c', lgh#build_git_command('add', backuppath).lgh#build_git_command('diff-index', '--quiet', 'HEAD', '--', backuppath)], callbacks)
 endfun
 
 fun! lgh#backup_file(dirname, filename)
