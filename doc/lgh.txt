@@ -6,8 +6,7 @@ LOCAL GIT HISTORY - TABLE OF CONTENTS                                  *lgh-toc*
     Introduction                          |lgh-intro|
     Installation                          |lgh-installation|
     Usage                                 |lgh-usage|
-    Autobackup                            |lgh-autobackup|
-    Commands                              |lgh-commands|
+    Options                               |lgh-options|
     Credits                               |lgh-credits|
     License                               |lgh-license|
 
@@ -60,6 +59,25 @@ You can specify not to use diff as default:
 See the history by:
 
     `:LGHistory`
+
+Commit all dangling files (maybe usefull if something gone wrong)
+
+    `:LGHFix`
+
+
+OPTIONS                                                            *lgh-options*
+==============================================================================
+
+There are some options available.
+Enable some output
+
+    `let g:lgh_verbose = 1`
+
+Enable automatic correction of users (e.g. while in sudo). May still not work
+perfectly.
+
+    `let g:lgh_fix_ownership = 1`
+
 
 
 INSPIRATION                                                    *lgh-inspiration*

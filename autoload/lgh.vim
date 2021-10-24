@@ -41,7 +41,7 @@ endfun
 
 fun! lgh#log(what, value)
     if get(g:, 'lgh_verbose', 0) != 0
-        echo a:what.": ".a:value
+        echomsg a:what.": ".a:value
     endif
 endfun
 
@@ -61,16 +61,49 @@ fun! lgh#commit_to_history(dirname, filename)
   call jobstart(['bash', '-c', lgh#build_git_command('add', backuppath).lgh#build_git_command('diff-index', '--quiet', 'HEAD', '--', backuppath)], callbacks)
 endfun
 
+fun! lgh#do_commit_dangling(error)
+  if a:error == 0
+    let backupdir = lgh#get_base_dir() . hostname()
+    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Backup dangling files in ", backupdir)}} 
+    call jobstart(lgh#build_git_command_list('commit', '-m', '"Backup dangling files"', backupdir), callbacks)
+  else
+    call lgh#log("Error while committing dangling", a:error)
+  endif
+endfun
+
+fun! lgh#commit_all_dangling()
+  let backupdir = lgh#get_base_dir() . hostname()
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#do_commit_dangling(error)} }
+  call jobstart(['bash', '-c', lgh#build_git_command('add', backupdir)], callbacks)
+endfun
+
+fun! lgh#backup_file_fix_ownership(dirname, filename)
+  let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
+  let backuppath = backupdir . '/' . a:filename
+  let realuser = getenv('SUDO_USER')
+  if realuser == v:null
+    let realuser = getenv('USER')
+  endif
+  echomsg "fixing file owner after copying". join(['chown', '-R',  realuser, fnameescape(backupdir)])
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_to_history(a:dirname, a:filename)} }
+  call jobstart(['chown', '-R',  realuser, fnameescape(backupdir)], callbacks)
+endfun
+
 fun! lgh#backup_file(dirname, filename)
-  let x = system("[[ \"$USERNAME\" == `who | awk '{print $1}' | head -n 1` ]]")
+  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_to_history(a:dirname, a:filename)} }
+  let x = system("[[ \"${SUDO_USER:-$USER}\" == `whoami` ]]")
   if v:shell_error != 0
-    echomsg "you are not acting as yourself, no backup will be taken"
-    return
+    if g:lgh_fix_ownership == 1
+      echomsg "fixing file owner after copying"
+      let callbacks = { 'on_exit': {jobid, error, event -> lgh#backup_file_fix_ownership(a:dirname, a:filename)} }
+    else
+      echomsg "You are not acting as yourself, file not backedup"
+      return
+    endif
   endif
   let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
   let backuppath = backupdir . '/' . a:filename
   call lgh#make_backup_dir(backupdir)
-  let callbacks = { 'on_exit': {jobid, error, event -> lgh#commit_to_history(a:dirname, a:filename)} }
   call jobstart(['cp', fnameescape(resolve(expand("%:p"))), fnameescape(backuppath)], callbacks)
 endfun
 
