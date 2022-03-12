@@ -22,6 +22,8 @@ com! LGHistory call fzf#run({'source': lgh#file_history(expand("%:p:h"), expand(
 
 com! LGHFix call lgh#commit_all_dangling()
 
+call lgh#commit_all_dangling()
+
 augroup local-git-history
     autocmd!
     autocmd BufWritePost * call lgh#backup_file(expand("%:p:h"), expand("%:t"))

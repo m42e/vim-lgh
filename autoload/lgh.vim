@@ -121,7 +121,7 @@ fun! lgh#open_backup(dirname, filename, filetype, entry)
 		if get(g:, 'lgh_diff', 1)
 			diffthis
 		endif
-    exe 'vnew | r! '.lgh#git_command('show', commit.':'.relpath)
+    exe 'vnew | r! '.lgh#build_git_command('show', commit.':'.relpath)
 		exe 'normal! 1Gdd'
     exe "setlocal bt=nofile bh=wipe nobl noswf ro ft=".a:filetype." | file ".a:filename." [".entry[1]."]"
 		if get(g:, 'lgh_diff', 1)
