@@ -19,7 +19,7 @@ endfun
 
 fun! lgh#build_git_command_list(...)
   let git_cmd = get(g:, 'lgh_git_command', 'git')
-  return [git_cmd, '--work-tree', lgh#get_base_dir(), '--git-dir', lgh#get_base_dir() . '.git']+ a:000 
+  return [git_cmd, '--work-tree', lgh#get_base_dir(), '--git-dir', lgh#get_base_dir() . '.git']+ a:000
 endfun
 
 fun! lgh#git_command(...)
@@ -49,7 +49,7 @@ fun! lgh#do_commit_history(error, dirname, filename)
   if a:error != 0
     let backupdir = lgh#get_base_dir() . hostname() . '/' . a:dirname
     let backuppath = backupdir . '/' . a:filename
-    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Saved Backup to ", backupdir)}} 
+    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Saved Backup to ", backupdir)}}
     call jobstart(lgh#build_git_command_list('commit', '-m', '"Backup '.a:dirname . '/'. a:filename.'"', backuppath), callbacks)
   endif
 endfun
@@ -64,7 +64,7 @@ endfun
 fun! lgh#do_commit_dangling(error)
   if a:error == 0
     let backupdir = lgh#get_base_dir() . hostname()
-    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Backup dangling files in ", backupdir)}} 
+    let callbacks = { 'on_exit': {jobid, error, event -> lgh#log("Backup dangling files in ", backupdir)}}
     call jobstart(lgh#build_git_command_list('commit', '-m', '"Backup dangling files"', backupdir), callbacks)
   else
     call lgh#log("Error while committing dangling", a:error)
