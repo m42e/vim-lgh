@@ -1,5 +1,9 @@
 # Vim Local Git History
 
+## neovim
+
+There is a lua-version of this plugin, too. It is here: https://github.com/m42e/lgh.nvim
+
 ## What this plugin does
 
 This plugin saves the file worked on in a git repository every time you save.
